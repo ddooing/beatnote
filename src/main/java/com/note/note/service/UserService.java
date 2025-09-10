@@ -84,11 +84,12 @@ public class UserService implements UserDetailsService {
             throw new AccessDeniedException("본인 계정만 수정 가능");
         }
 
-        // 조회
+        // 자체 로그인 여부, 잠김 여부를 위해 조회
         UserEntity entity = userRepository.findByUsernameAndIsLockAndIsSocial(dto.getUsername(), false, false)
                 .orElseThrow(() -> new UsernameNotFoundException(dto.getUsername()));
 
         // 회원 정보 수정
+            //
         entity.updateUser(dto.getEmail(), dto.getNickname());
 
         return userRepository.save(entity).getId();
