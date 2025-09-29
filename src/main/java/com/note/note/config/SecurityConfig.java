@@ -35,16 +35,19 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final AuthenticationSuccessHandler loginSuccessHandler;
+   // private final AuthenticationSuccessHandler socialSuccessHandler;
     private final JwtService jwtService;
 
     public SecurityConfig(
             AuthenticationConfiguration authenticationConfiguration,
             @Qualifier("LoginSuccessHandler") AuthenticationSuccessHandler loginSuccessHandler,
+           // @Qualifier("SocialSuccessHandler") AuthenticationSuccessHandler socialSuccessHandler,
             JwtService jwtService
     ) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.loginSuccessHandler = loginSuccessHandler;
-        this.jwtService=jwtService;
+       // this.socialSuccessHandler = socialSuccessHandler;
+        this.jwtService = jwtService;
     }
 
     // 커스텀 자체 로그인 필터를 위한 AuthenticationManager Bean 수동 등록
@@ -53,7 +56,7 @@ public class SecurityConfig {
         return configuration.getAuthenticationManager();
     }
 
-    // role 계층 설정
+    // 권한 계층
     @Bean
     public RoleHierarchy roleHierarchy() {
         return RoleHierarchyImpl.withRolePrefix("ROLE_")
@@ -61,18 +64,17 @@ public class SecurityConfig {
                 .build();
     }
 
-
     // 비밀번호 단방향(BCrypt) 암호화용 Bean
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    //cors 설정
+    // CORS Bean
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:3000"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
@@ -93,12 +95,13 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable);
 
         // CORS 설정
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         // 기본 로그아웃 필터 + 커스텀 Refresh 토큰 삭제 핸들러 추가
         http
                 .logout(logout -> logout
                         .addLogoutHandler(new RefreshTokenLogoutHandler(jwtService)));
-
 
         // 기본 Form 기반 인증 필터들 disable
         http
@@ -108,10 +111,23 @@ public class SecurityConfig {
         http
                 .httpBasic(AbstractHttpConfigurer::disable);
 
+        /*
+        // OAuth2 인증용
+        http
+                .oauth2Login(oauth2 -> oauth2
+                        .successHandler(socialSuccessHandler));*/
+
         // 인가
         http
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll());
+                        //.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/jwt/exchange", "/jwt/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/user/exist", "/user").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/user").hasRole(UserRoleType.USER.name())
+                        .requestMatchers(HttpMethod.PUT, "/user").hasRole(UserRoleType.USER.name())
+                        .requestMatchers(HttpMethod.DELETE, "/user").hasRole(UserRoleType.USER.name())
+                        .anyRequest().authenticated()
+                );
 
         // 예외 처리
         http
@@ -126,31 +142,14 @@ public class SecurityConfig {
 
         // 커스텀 필터 추가
         http
+                .addFilterBefore(new JWTFilter(), LogoutFilter.class);
+        http
                 .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler), UsernamePasswordAuthenticationFilter.class);
 
         // 세션 필터 설정 (STATELESS)
         http
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
-        //JWT filter
-        http
-                .addFilterBefore(new JWTFilter(), LogoutFilter.class);
-        //cors 설정
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
-
-        // 인가
-        http
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/jwt/exchange", "/jwt/refresh").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/user/exist", "/user").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/user").hasRole(UserRoleType.USER.name())
-                        .requestMatchers(HttpMethod.PUT, "/user").hasRole(UserRoleType.USER.name())
-                        .requestMatchers(HttpMethod.DELETE, "/user").hasRole(UserRoleType.USER.name())
-                        .anyRequest().authenticated()
-                );
-
 
         return http.build();
     }

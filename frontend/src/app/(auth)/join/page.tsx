@@ -19,6 +19,7 @@ export default function JoinPage() {
 
   // username 입력 실시간 중복 확인
   useEffect(() => {
+      console.log("BACKEND_API_BASE_URL:",BACKEND_API_BASE_URL);
     // username이 4자 미만이면 검증을 스킵합니다.
     if (username.length < 4) {
       setIsUsernameValid(null);
@@ -79,6 +80,7 @@ export default function JoinPage() {
       const res = await fetch(`${BACKEND_API_BASE_URL}/user`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username, password, nickname, email }),
       });
 
