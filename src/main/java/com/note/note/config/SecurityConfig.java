@@ -35,18 +35,18 @@ public class SecurityConfig {
 
     private final AuthenticationConfiguration authenticationConfiguration;
     private final AuthenticationSuccessHandler loginSuccessHandler;
-   // private final AuthenticationSuccessHandler socialSuccessHandler;
+    private final AuthenticationSuccessHandler socialSuccessHandler;
     private final JwtService jwtService;
 
     public SecurityConfig(
             AuthenticationConfiguration authenticationConfiguration,
             @Qualifier("LoginSuccessHandler") AuthenticationSuccessHandler loginSuccessHandler,
-           // @Qualifier("SocialSuccessHandler") AuthenticationSuccessHandler socialSuccessHandler,
+            @Qualifier("SocialSuccessHandler") AuthenticationSuccessHandler socialSuccessHandler,
             JwtService jwtService
     ) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.loginSuccessHandler = loginSuccessHandler;
-       // this.socialSuccessHandler = socialSuccessHandler;
+        this.socialSuccessHandler = socialSuccessHandler;
         this.jwtService = jwtService;
     }
 
@@ -111,11 +111,11 @@ public class SecurityConfig {
         http
                 .httpBasic(AbstractHttpConfigurer::disable);
 
-        /*
+
         // OAuth2 인증용
         http
                 .oauth2Login(oauth2 -> oauth2
-                        .successHandler(socialSuccessHandler));*/
+                        .successHandler(socialSuccessHandler));
 
         // 인가
         http

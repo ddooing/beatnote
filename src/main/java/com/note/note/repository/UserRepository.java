@@ -19,4 +19,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     //안잠긴 유저만 정보 조회
     Optional<UserEntity> findByUsernameAndIsLock(String username, Boolean isLock);
+
+    Optional<UserEntity> findByUsernameAndIsSocial(String username, Boolean social);
 }
