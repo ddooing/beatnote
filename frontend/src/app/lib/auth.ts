@@ -10,11 +10,6 @@ interface AuthRefreshResponse {
 const API_BASE_URL =process.env.NEXT_PUBLIC_BACKEND_API_BASE_URL;
 
 
-/**
- * AccessToken이 만료되었을 때 RefreshToken을 사용하여 새로운 토큰을 갱신합니다.
- * @throws {Error} RefreshToken이 없거나 갱신 요청에 실패한 경우
- * @returns {Promise<string>} 새로 발급받은 AccessToken
- */
 export async function refreshAccessToken(): Promise<string> {
     // 1. 로컬 스토리지로부터 RefreshToken 가져옴
     const refreshToken = localStorage.getItem("refreshToken");

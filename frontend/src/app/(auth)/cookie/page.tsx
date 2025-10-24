@@ -9,6 +9,7 @@ export default function CookiePage() {
 const router = useRouter();
 
   useEffect(() => {
+      //3. 쿠키를 백으로 보냄
     const controller = new AbortController();
 
     const cookieToBody = async () => {

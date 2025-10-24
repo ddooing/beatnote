@@ -2,6 +2,7 @@ package com.note.note.config;
 import com.note.note.Entity.UserRoleType;
 import com.note.note.filter.JWTFilter;
 import com.note.note.filter.LoginFilter;
+import com.note.note.handler.CustomLogoutSuccessHandler;
 import com.note.note.handler.RefreshTokenLogoutHandler;
 import com.note.note.service.JwtService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -38,16 +39,19 @@ public class SecurityConfig {
     private final AuthenticationSuccessHandler socialSuccessHandler;
     private final JwtService jwtService;
 
+    private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
+
     public SecurityConfig(
             AuthenticationConfiguration authenticationConfiguration,
             @Qualifier("LoginSuccessHandler") AuthenticationSuccessHandler loginSuccessHandler,
             @Qualifier("SocialSuccessHandler") AuthenticationSuccessHandler socialSuccessHandler,
-            JwtService jwtService
-    ) {
+            JwtService jwtService, CustomLogoutSuccessHandler customLogoutSuccessHandler
+            ) {
         this.authenticationConfiguration = authenticationConfiguration;
         this.loginSuccessHandler = loginSuccessHandler;
         this.socialSuccessHandler = socialSuccessHandler;
         this.jwtService = jwtService;
+        this.customLogoutSuccessHandler = customLogoutSuccessHandler;
     }
 
     // 커스텀 자체 로그인 필터를 위한 AuthenticationManager Bean 수동 등록
@@ -101,7 +105,10 @@ public class SecurityConfig {
         // 기본 로그아웃 필터 + 커스텀 Refresh 토큰 삭제 핸들러 추가
         http
                 .logout(logout -> logout
-                        .addLogoutHandler(new RefreshTokenLogoutHandler(jwtService)));
+                                .addLogoutHandler(new RefreshTokenLogoutHandler(jwtService))
+                                .deleteCookies("JSESSIONID", "remember-me")//쿠키  삭제
+                                .logoutSuccessHandler(customLogoutSuccessHandler)
+                         );
 
         // 기본 Form 기반 인증 필터들 disable
         http

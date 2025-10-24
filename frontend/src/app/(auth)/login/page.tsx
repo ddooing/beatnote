@@ -7,6 +7,7 @@ export default function LoginPage() {
 
 
   const handleNaverLogin = () => {
+      // 1. 소셜 로그인 요청
     window.location.href = `${BACKEND_API_BASE_URL}/oauth2/authorization/naver`;
   };
 
